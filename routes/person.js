@@ -92,6 +92,44 @@ router.get('/:uname1/follow/:uname2', async (req, res) => {
     res.send(user1.name + " now follows " + user2.name);
 })
 
+//Used to unfollow another person (Many->Many demo)
+router.get('/:uname1/unfollow/:uname2', async (req, res) => {
+    const uname1 = req.params.uname1;
+    const uname2 = req.params.uname2;
+    await Person.sync();
+    const user1 = await Person.findOne({ where: { name: uname1 } });
+    const user2 = await Person.findOne({ where: { name: uname2 } });
+    if (user1 === null || user2 === null) {
+        res.send('NOPERSON');
+        return;
+    }
+    if(!(await user1.hasFollowers(user2))){
+        res.send(user1.name + ' does not follow ' + user2.name)
+        return;
+    }
+    await user1.removeFollowers(user2);
+    res.send(user1.name + ' unfollowed ' + user2.name)
+})
+
+//Used to remove a follower person (Many->Many demo)
+router.get('/:uname1/remove_follower/:uname2', async (req, res) => {
+    const uname1 = req.params.uname1;
+    const uname2 = req.params.uname2;
+    await Person.sync();
+    const user1 = await Person.findOne({ where: { name: uname1 } });
+    const user2 = await Person.findOne({ where: { name: uname2 } });
+    if (user1 === null || user2 === null) {
+        res.send('NOPERSON');
+        return;
+    }
+    if(!(await user1.hasFollowing(user2))){
+        res.send(user2.name + 'does not follow ' + user1.name)
+        return;
+    }
+    await user1.removeFollowing(user2);
+    res.send(user2.name + ' removed from  ' + user1.name + "'s follower list")
+})
+
 //Used to add devices to a person's collection
 router.get('/:owner/add_device/:device_name', async (req, res) => {
     const owner = req.params.owner;
